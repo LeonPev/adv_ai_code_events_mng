@@ -1,0 +1,138 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                       String    @id @default(cuid())
+  email                    String    @unique
+  passwordHash             String
+  fullName                 String
+  phone                    String?
+  dateOfBirth              DateTime?
+  role                     String    @default("CUSTOMER") // CUSTOMER | OPERATOR | ADMIN
+  status                   String    @default("ACTIVE")   // ACTIVE | SUSPENDED | INACTIVE
+  paymentMethodPlaceholder String?
+  createdAt                DateTime  @default(now())
+
+  registrations     Registration[]
+  createdActivities Activity[]         @relation("CreatedBy")
+  checkedIn         AttendanceRecord[] @relation("CheckedInBy")
+
+  // NextAuth adapter fields
+  accounts Account[]
+  sessions Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Room {
+  id          String  @id @default(cuid())
+  name        String
+  type        String  // CLASSROOM | ART_STUDIO | AUDITORIUM
+  capacity    Int
+  description String?
+  isActive    Boolean @default(true)
+
+  activities Activity[]
+  sessions   CourseSession[]
+}
+
+model Activity {
+  id               String    @id @default(cuid())
+  name             String
+  type             String    // EVENT | SEMINAR | COURSE
+  description      String
+  roomId           String
+  capacity         Int
+  status           String    @default("DRAFT") // DRAFT | PUBLISHED | CANCELLED
+  pricePlaceholder Float?
+  startDatetime    DateTime?
+  endDatetime      DateTime?
+  createdById      String
+  createdAt        DateTime  @default(now())
+
+  room          Room               @relation(fields: [roomId], references: [id])
+  createdBy     User               @relation("CreatedBy", fields: [createdById], references: [id])
+  sessions      CourseSession[]
+  registrations Registration[]
+  attendance    AttendanceRecord[]
+}
+
+model CourseSession {
+  id            String   @id @default(cuid())
+  courseId      String
+  sessionNumber Int
+  startDatetime DateTime
+  endDatetime   DateTime
+  roomId        String
+
+  course Activity @relation(fields: [courseId], references: [id])
+  room   Room     @relation(fields: [roomId], references: [id])
+}
+
+model Registration {
+  id                       String    @id @default(cuid())
+  customerId               String
+  activityId               String
+  registeredAt             DateTime  @default(now())
+  status                   String    @default("ACTIVE") // ACTIVE | CANCELLED
+  qrToken                  String?   @unique
+  paymentStatusPlaceholder String    @default("pending")
+
+  customer   User              @relation(fields: [customerId], references: [id])
+  activity   Activity          @relation(fields: [activityId], references: [id])
+  attendance AttendanceRecord?
+
+  @@unique([customerId, activityId])
+}
+
+model AttendanceRecord {
+  id             String   @id @default(cuid())
+  registrationId String   @unique
+  eventId        String
+  checkedInAt    DateTime @default(now())
+  checkedInById  String
+
+  registration Registration @relation(fields: [registrationId], references: [id])
+  event        Activity     @relation(fields: [eventId], references: [id])
+  checkedInBy  User         @relation("CheckedInBy", fields: [checkedInById], references: [id])
+}
