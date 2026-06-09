@@ -14,3 +14,6 @@ Documentation updates made:
 
 No-update reasons:
 - [explain docs checked but not changed]
+
+use git commands to check the ccode diff.
+NEVER commit or push, this is my job.
