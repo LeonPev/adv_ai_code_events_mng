@@ -17,9 +17,37 @@ npx prisma migrate reset               # reset DB and re-run all migrations
 npx prisma db push                     # push schema without a migration (dev only)
 npx prisma studio                      # GUI browser for the DB
 npm run prisma -- db seed              # or: npx tsx prisma/seed.ts
+
+# Testing (Vitest unit/integration + Playwright E2E)
+npm run test:db:setup   # create prisma/test.db — run once and after schema changes
+npm test                # Vitest run (all *.test.ts files)
+npm run test:watch      # Vitest watch mode
+npm run test:coverage   # Vitest with v8 coverage
+npm run test:e2e        # Playwright (requires dev server or auto-starts one on port 3001)
+npm run test:e2e:ui     # Playwright interactive UI
+npm run test:db:reset   # wipe and re-migrate prisma/test.db
+npm run test:db:seed    # seed prisma/test.db with the standard three accounts
 ```
 
-No test suite is set up yet.
+## Testing
+
+Two-tier test suite:
+
+| Layer | Tool | Files | DB |
+|---|---|---|---|
+| Unit / integration | Vitest 4 | `src/**/*.test.{ts,tsx}` | `prisma/test.db` |
+| E2E | Playwright | `e2e/**/*.spec.ts` | `prisma/test.db` |
+
+`prisma/test.db` is a separate SQLite file from `dev.db`. Run `npm run test:db:setup` once after cloning (and again after each schema migration). The `DATABASE_URL=file:./test.db` env var is injected automatically by `vitest.config.ts` and `playwright.config.ts`.
+
+### Key conventions
+
+- **Server action tests** use integration style: seed via `testPrisma` from `src/tests/helpers/db.ts`, then call the action directly. `vi.mock('@/lib/prisma')` does **not** intercept transitive imports in Vitest 4 — use real test DB instead.
+- **NextAuth `authorize`**: access via `authOptions.providers[0].options.authorize`, not `providers[0].authorize` (the outer wrapper requires full NextAuth request context and returns `null` in isolation).
+- **`getServerSession` mock**: import from `src/tests/helpers/session.ts` and use `vi.mock('@/lib/auth')` with the factory from `src/lib/__mocks__/auth.ts`.
+- **`vi.clearAllMocks()`** runs globally after each test (in `vitest.setup.ts`). Do not use `vi.restoreAllMocks()` — it breaks `vitest-mock-extended` proxies.
+- Vitest uses `pool: 'forks'` + `sequence: { concurrent: false }` to prevent SQLite write-lock contention.
+- Playwright auth state (logged-in cookies) is pre-generated in `e2e/global-setup.ts` and stored in `e2e/.auth/` (gitignored).
 
 ## Architecture
 
