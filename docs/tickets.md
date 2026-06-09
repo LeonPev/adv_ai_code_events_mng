@@ -14,7 +14,7 @@ Wire up the signup form at `src/app/auth/signup/page.tsx`. On submit, call a ser
 1. Validates email uniqueness, password length (≥ 8 chars).
 2. Hashes the password with bcrypt.
 3. Creates a `User` record with `role = CUSTOMER`, `status = ACTIVE`.
-4. Signs the user in via NextAuth `signIn("credentials", …)` and redirects to `/activities`.
+4. Returns `{ success: true }`. The client page then calls `signIn("credentials", …)` with `callbackUrl: '/activities'`.
 
 **Acceptance criteria**
 - Duplicate email returns an inline error; no redirect.
@@ -22,6 +22,8 @@ Wire up the signup form at `src/app/auth/signup/page.tsx`. On submit, call a ser
 - New user appears in the DB with a hashed password (never plaintext).
 
 **PRD refs:** FR-AUTH-01, FR-AUTH-02
+
+**Verification:** Add a Vitest integration test (new file `src/app/auth/signup/signup.test.ts`) that seeds the DB via `testPrisma`, calls the signup server action directly, and asserts: (1) a new user row exists with a bcrypt-hashed password; (2) calling the action again with the same email returns a duplicate-email error without creating a second row. Add a Playwright E2E spec (`e2e/auth.spec.ts`) for the happy path: fill the signup form → assert redirect to `/activities`. Note: asserting the nav shows the user's name requires a nav component to exist — defer to when the shared layout is built.
 
 ---
 
