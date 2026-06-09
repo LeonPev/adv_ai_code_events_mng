@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import path from 'path'
 
-// Playwright doesn't inject DATABASE_URL into the test runner — use the same URL the webServer gets
+// Use an absolute path so the Prisma client resolves to the same file the webServer uses
 const testDb = new PrismaClient({
-  datasources: { db: { url: process.env.DATABASE_URL ?? 'file:./test.db' } },
+  datasources: { db: { url: `file:${path.resolve('./prisma/test.db')}` } },
 })
 
 test.describe('Login', () => {
@@ -55,7 +56,7 @@ test.describe('Login', () => {
     await page.getByLabel(/email/i).fill('customer@ccms.local')
     await page.getByLabel(/password/i).fill('totallyWrong')
     await page.getByRole('button', { name: /sign in/i }).click()
-    await expect(page.getByRole('alert')).toContainText(/invalid email or password/i)
+    await expect(page.locator('p[role="alert"]')).toContainText(/invalid email or password/i)
     await expect(page).toHaveURL('/auth/login')
   })
 
@@ -64,7 +65,7 @@ test.describe('Login', () => {
     await page.getByLabel(/email/i).fill('suspended@ccms.local')
     await page.getByLabel(/password/i).fill('susp123')
     await page.getByRole('button', { name: /sign in/i }).click()
-    await expect(page.getByRole('alert')).toContainText(/suspended/i)
+    await expect(page.locator('p[role="alert"]')).toContainText(/suspended/i)
     await expect(page).toHaveURL('/auth/login')
   })
 

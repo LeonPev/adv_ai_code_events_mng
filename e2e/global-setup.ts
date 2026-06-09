@@ -16,7 +16,8 @@ export default async function globalSetup() {
   mkdirSync('e2e/.auth', { recursive: true })
 
   const browser = await chromium.launch()
-  const page = await browser.newPage()
+  const context = await browser.newContext({ baseURL: 'http://localhost:3001' })
+  const page = await context.newPage()
 
   await loginAndSaveState(page, 'admin')
   await loginAndSaveState(page, 'operator')

@@ -84,8 +84,9 @@ describe('authorize (integration)', () => {
     expect(await authorize({ email: 'nobody@test.com', password: 'pass' }, {})).toBeNull()
   })
 
-  it('returns null when user status is SUSPENDED', async () => {
-    expect(await authorize({ email: 'suspended@test.com', password: 'correct123' }, {})).toBeNull()
+  it('throws a SUSPENDED error for a suspended account with correct credentials', async () => {
+    await expect(authorize({ email: 'suspended@test.com', password: 'correct123' }, {}))
+      .rejects.toThrow(/suspended/i)
   })
 
   it('returns null when password is wrong', async () => {
