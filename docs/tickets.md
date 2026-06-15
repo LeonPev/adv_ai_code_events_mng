@@ -217,7 +217,7 @@ Register button behavior:
 Implement the `registerForActivity(activityId)` server action. Logic:
 1. Get `session.user.id`; reject if unauthenticated.
 2. Check `Registration` table for an existing active record for this customer + activity (BR-04).
-3. Count active registrations and compare to `Activity.capacity` (BR-01). Use a DB transaction with a `SELECT … FOR UPDATE` equivalent — in SQLite/Prisma, wrap steps 3–5 in `prisma.$transaction` to avoid the race condition described in §15.
+3. Count active registrations and compare to `Activity.capacity` (BR-01). Use a PostgreSQL-safe transaction strategy, such as an interactive Prisma transaction plus an activity-row lock, to avoid the race condition described in §15.
 4. Create the `Registration` record.
 5. If `activity.type === 'EVENT'`, generate a cryptographically random `qrToken` (`crypto.randomBytes(32).toString('hex')`) and store it on the registration.
 6. Return the new registration ID.
@@ -513,7 +513,7 @@ Exclude the activity being edited from the conflict check (otherwise editing its
 
 ### T-26 · Capacity race condition (atomic registration)
 
-Ensure the `registerForActivity` server action (T-11) uses a Prisma interactive transaction that re-reads the registration count inside the transaction before inserting. Because SQLite serializes writes, the transaction approach is sufficient — document this assumption in a comment for future DB migration.
+Ensure the `registerForActivity` server action (T-11) uses a Prisma interactive transaction that re-reads the registration count inside the transaction before inserting and locks the activity row in PostgreSQL before checking capacity.
 
 Also handle EC-01: if an admin reduces `Activity.capacity` below the current active registration count, the activity should show an "Over-committed" warning badge in the admin detail view (A-03). No registrations are auto-cancelled; no new registrations are accepted while over-committed.
 

@@ -1,6 +1,7 @@
 import { getServerSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import { SignOutButton } from "@/components/SignOutButton"
 
 const navItems = [
   { href: "/admin", label: "Dashboard" },
@@ -35,8 +36,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </Link>
           ))}
         </nav>
-        <div className="px-5 py-3 border-t border-gray-200 text-xs text-gray-500">
-          {session.user.name}
+        <div className="px-5 py-3 border-t border-gray-200 flex flex-col gap-1">
+          <span className="text-xs text-gray-500">{session.user.name}</span>
+          <SignOutButton className="text-xs text-left text-gray-400 hover:text-gray-700" />
         </div>
       </aside>
       <main className="flex-1 px-8 py-8">{children}</main>

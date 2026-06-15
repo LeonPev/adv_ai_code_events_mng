@@ -1,5 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const testDatabaseUrl = process.env.TEST_DATABASE_URL
+
+if (!testDatabaseUrl) {
+  throw new Error('TEST_DATABASE_URL is required for Playwright')
+}
+
 export default defineConfig({
   testDir: './e2e',
   outputDir: './e2e/.test-results',
@@ -21,7 +27,8 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
-      DATABASE_URL: 'file:./test.db',
+      DATABASE_URL: testDatabaseUrl,
+      TEST_DATABASE_URL: testDatabaseUrl,
       NEXTAUTH_SECRET: 'test-secret-not-for-production',
       NEXTAUTH_URL: 'http://localhost:3001',
     },

@@ -1,9 +1,15 @@
 import { PrismaClient } from '@prisma/client'
 import crypto from 'crypto'
 
+const testDatabaseUrl = process.env.TEST_DATABASE_URL
+
+if (!testDatabaseUrl) {
+  throw new Error('TEST_DATABASE_URL is required for E2E data fixtures')
+}
+
 // Direct DB access for E2E test data setup — separate client from app's singleton
 const db = new PrismaClient({
-  datasources: { db: { url: 'file:./test.db' } },
+  datasources: { db: { url: testDatabaseUrl } },
 })
 
 export async function createTestRegistration(opts: {

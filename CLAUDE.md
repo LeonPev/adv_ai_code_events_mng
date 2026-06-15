@@ -10,6 +10,7 @@ All commands below run from the repo root.
 npm run dev        # start dev server at http://localhost:3000
 npm run build      # production build
 npm run lint       # ESLint
+npm run deploy     # deploy local source to Firebase App Hosting backend ccms
 
 # Database
 npx prisma migrate dev --name <name>   # create and apply a migration
@@ -19,14 +20,14 @@ npx prisma studio                      # GUI browser for the DB
 npm run prisma -- db seed              # or: npx tsx prisma/seed.ts
 
 # Testing (Vitest unit/integration + Playwright E2E)
-npm run test:db:setup   # create prisma/test.db — run once and after schema changes
+npm run test:db:setup   # apply migrations to TEST_DATABASE_URL
 npm test                # Vitest run (all *.test.ts files)
 npm run test:watch      # Vitest watch mode
 npm run test:coverage   # Vitest with v8 coverage
 npm run test:e2e        # Playwright (requires dev server or auto-starts one on port 3001)
 npm run test:e2e:ui     # Playwright interactive UI
-npm run test:db:reset   # wipe and re-migrate prisma/test.db
-npm run test:db:seed    # seed prisma/test.db with the standard three accounts
+npm run test:db:reset   # wipe and re-migrate TEST_DATABASE_URL
+npm run test:db:seed    # seed TEST_DATABASE_URL with the standard three accounts
 ```
 
 ## Testing
@@ -35,10 +36,10 @@ Two-tier test suite:
 
 | Layer | Tool | Files | DB |
 |---|---|---|---|
-| Unit / integration | Vitest 4 | `src/**/*.test.{ts,tsx}` | `prisma/test.db` |
-| E2E | Playwright | `e2e/**/*.spec.ts` | `prisma/test.db` |
+| Unit / integration | Vitest 4 | `src/**/*.test.{ts,tsx}` | PostgreSQL via `TEST_DATABASE_URL` |
+| E2E | Playwright | `e2e/**/*.spec.ts` | PostgreSQL via `TEST_DATABASE_URL` |
 
-`prisma/test.db` is a separate SQLite file from `dev.db`. Run `npm run test:db:setup` once after cloning (and again after each schema migration). The `DATABASE_URL=file:./test.db` env var is injected automatically by `vitest.config.ts` and `playwright.config.ts`.
+Use a disposable PostgreSQL database for tests and set `TEST_DATABASE_URL` before running DB setup, Vitest, or Playwright. `vitest.config.ts` and `playwright.config.ts` inject that value as `DATABASE_URL` for the app.
 
 ### Key conventions
 
@@ -46,14 +47,14 @@ Two-tier test suite:
 - **NextAuth `authorize`**: access via `authOptions.providers[0].options.authorize`, not `providers[0].authorize` (the outer wrapper requires full NextAuth request context and returns `null` in isolation).
 - **`getServerSession` mock**: import from `src/tests/helpers/session.ts` and use `vi.mock('@/lib/auth')` with the factory from `src/lib/__mocks__/auth.ts`.
 - **`vi.clearAllMocks()`** runs globally after each test (in `vitest.setup.ts`). Do not use `vi.restoreAllMocks()` — it breaks `vitest-mock-extended` proxies.
-- Vitest uses `pool: 'forks'` + `sequence: { concurrent: false }` to prevent SQLite write-lock contention.
+- Vitest uses `pool: 'forks'` + `sequence: { concurrent: false }` so DB integration tests stay deterministic.
 - Playwright auth state (logged-in cookies) is pre-generated in `e2e/global-setup.ts` and stored in `e2e/.auth/` (gitignored).
 
 ## Architecture
 
 ### Stack
 - **Next.js 14** App Router with React Server Components
-- **Prisma 5** + **SQLite** (`prisma/dev.db`, path set via `DATABASE_URL` in `.env`)
+- **Prisma 5** + **PostgreSQL** (`DATABASE_URL` in `.env`)
 - **NextAuth v4** — credentials-based, JWT session strategy; config in `src/lib/auth.ts`
 - **Tailwind CSS** for styling
 

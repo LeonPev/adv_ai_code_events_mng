@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 
-// Dedicated client for test setup/teardown — points at test.db via DATABASE_URL from vitest.config.ts
+// Dedicated client for test setup/teardown; DATABASE_URL is injected from TEST_DATABASE_URL.
 export const testPrisma = new PrismaClient()
 
 // Delete rows in FK-safe order (children before parents)
