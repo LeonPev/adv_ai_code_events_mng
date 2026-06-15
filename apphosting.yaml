@@ -1,0 +1,27 @@
+runConfig:
+  minInstances: 0
+  maxInstances: 3
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+  vpcAccess:
+    egress: PRIVATE_RANGES_ONLY
+    networkInterfaces:
+      - network: ccms-vpc
+        subnetwork: ccms-us-central1
+
+env:
+  - variable: DATABASE_URL
+    secret: DATABASE_URL
+    availability:
+      - RUNTIME
+
+  - variable: NEXTAUTH_SECRET
+    secret: NEXTAUTH_SECRET
+    availability:
+      - RUNTIME
+
+  - variable: NEXTAUTH_URL
+    secret: NEXTAUTH_URL
+    availability:
+      - RUNTIME

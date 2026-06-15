@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl *)"
+    ]
+  },
+  "model": "sonnet",
+  "availableModels": ["sonnet", "haiku"],
+  "effortLevel": "medium",
+  "enabledMcpjsonServers": [
+    "github"
+  ]
+}
