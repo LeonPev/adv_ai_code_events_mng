@@ -1,5 +1,6 @@
 import { getServerSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { SignOutButton } from "@/components/SignOutButton"
 
 export default async function OperatorLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession()
@@ -13,6 +14,7 @@ export default async function OperatorLayout({ children }: { children: React.Rea
       <nav className="bg-gray-800 px-6 py-3 flex items-center gap-4">
         <span className="font-semibold">Check-In</span>
         <span className="ml-auto text-sm text-gray-400">{session.user.name}</span>
+        <SignOutButton className="text-sm text-gray-400 hover:text-white" />
       </nav>
       <main className="p-6">{children}</main>
     </div>

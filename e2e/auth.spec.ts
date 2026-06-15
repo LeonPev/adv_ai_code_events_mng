@@ -1,11 +1,15 @@
 import { test, expect } from '@playwright/test'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-import path from 'path'
 
-// Use an absolute path so the Prisma client resolves to the same file the webServer uses
+const testDatabaseUrl = process.env.TEST_DATABASE_URL
+
+if (!testDatabaseUrl) {
+  throw new Error('TEST_DATABASE_URL is required for E2E tests')
+}
+
 const testDb = new PrismaClient({
-  datasources: { db: { url: `file:${path.resolve('./prisma/test.db')}` } },
+  datasources: { db: { url: testDatabaseUrl } },
 })
 
 test.describe('Login', () => {

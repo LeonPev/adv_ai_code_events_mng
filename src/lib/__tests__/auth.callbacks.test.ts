@@ -1,6 +1,6 @@
 /**
  * Unit tests for the NextAuth JWT/session callbacks.
- * The `authorize` function is tested as an integration test below (with real test.db)
+ * The `authorize` function is tested as an integration test below (with TEST_DATABASE_URL)
  * because Vitest 4's mock registry does not intercept transitive relative imports
  * (auth.ts imports prisma via './prisma'; vi.mock('@/lib/prisma') only intercepts
  * direct imports from test files).
@@ -37,7 +37,7 @@ const sessionCallback = authOptions.callbacks!.session! as (params: {
 }) => Promise<{ user: Record<string, unknown>; expires: string }>
 
 // ---------------------------------------------------------------------------
-// authorize — integration tests using test.db
+// authorize — integration tests using TEST_DATABASE_URL
 // ---------------------------------------------------------------------------
 
 describe('authorize (integration)', () => {
