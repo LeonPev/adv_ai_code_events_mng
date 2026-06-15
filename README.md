@@ -33,12 +33,13 @@ export TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ccms_test
 npm run test:db:setup   # apply migrations to the test database
 npm test                # Vitest unit + integration tests
 npm run test:e2e        # Playwright E2E tests
+npm run security:audit  # critical production dependency vulnerability audit
 ```
 
 ## Deployment
 
-Production deploys run in GitHub Actions on pushes to `main` after linting,
-building, Vitest, and Playwright pass.
+CI runs in GitHub Actions for pushes and pull requests. Production deploys are
+manual: run the CI workflow from GitHub Actions with `deploy` enabled.
 
 ```bash
 npm run deploy

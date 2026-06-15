@@ -14,20 +14,24 @@ This app deploys to Firebase App Hosting in project `huji-leon`.
 
 ## CI Deploy
 
-Production deploys run from `.github/workflows/ci.yml` on pushes to `main`.
-The deploy job starts only after the test job succeeds.
+CI runs from `.github/workflows/ci.yml` on pushes, pull requests, and manual
+workflow dispatches. Production deploys are manual: start the `CI` workflow from
+GitHub Actions and enable the `deploy` input. The deploy job starts only after
+the `security`, `lint`, `unittests`, and `e2e` jobs succeed.
 
-The test job runs:
+The CI jobs are:
 
-- `npm ci`
-- `npx prisma generate`
-- `npm run test:db:setup` against a disposable PostgreSQL service
-- `npm run lint`
-- `npm run build`
-- `npm test`
-- `npm run test:e2e`
+- `security`: installs dependencies, blocks critical production dependency
+  vulnerabilities with `npm run security:audit`, and reports high severity
+  advisories with `npm run security:audit:strict`.
+- `lint`: installs dependencies, generates the Prisma client, and runs
+  `npm run lint`.
+- `unittests`: starts a disposable PostgreSQL service, applies migrations,
+  runs `npm run build`, and runs `npm test`.
+- `e2e`: starts a disposable PostgreSQL service, generates the Prisma client,
+  installs Chromium for Playwright, and runs `npm run test:e2e`.
 
-The deploy job runs:
+When the manual `deploy` input is enabled, the deploy job runs:
 
 ```bash
 npm run deploy
@@ -37,12 +41,8 @@ It deploys the repository source to Firebase App Hosting backend `ccms`.
 
 ### GitHub authentication
 
-Configure one of these authentication methods in the GitHub repository:
-
-- Service account key: add a repository secret named
-  `FIREBASE_SERVICE_ACCOUNT_HUJI_LEON` containing the service account JSON.
-- Workload identity: add repository variables named
-  `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT`.
+Add a repository secret named `FIREBASE_SERVICE_ACCOUNT_HUJI_LEON` containing
+the service account JSON.
 
 The service account needs permission to deploy Firebase App Hosting for project
 `huji-leon`.

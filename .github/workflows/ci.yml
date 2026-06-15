@@ -3,8 +3,13 @@ name: CI
 on:
   pull_request:
   push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy to Firebase App Hosting after tests pass
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,14 +17,60 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write
 
 env:
   NODE_VERSION: 20
 
 jobs:
-  test:
-    name: Test and build
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit critical production dependencies
+        run: npm run security:audit
+
+      - name: Report high severity production advisories
+        run: npm run security:audit:strict
+        continue-on-error: true
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+  unittests:
+    name: Unit tests
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ccms_test?schema=public
@@ -61,14 +112,51 @@ jobs:
       - name: Apply test database migrations
         run: npm run test:db:setup
 
-      - name: Lint
-        run: npm run lint
-
       - name: Build
         run: npm run build
 
       - name: Run Vitest
         run: npm test
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ccms_test?schema=public
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ccms_test?schema=public
+      NEXTAUTH_SECRET: test-secret-not-for-production
+      NEXTAUTH_URL: http://localhost:3001
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ccms_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d ccms_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -88,26 +176,18 @@ jobs:
 
   deploy:
     name: Deploy to Firebase App Hosting
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - security
+      - lint
+      - unittests
+      - e2e
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy
     runs-on: ubuntu-latest
     environment:
       name: production
       url: https://ccms--huji-leon.us-central1.hosted.app
-    env:
-      FIREBASE_SERVICE_ACCOUNT_CONFIGURED: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_HUJI_LEON != '' }}
-      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-      GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
 
     steps:
-      - name: Check deployment credentials
-        shell: bash
-        run: |
-          if [[ "$FIREBASE_SERVICE_ACCOUNT_CONFIGURED" != "true" && ( -z "$GCP_WORKLOAD_IDENTITY_PROVIDER" || -z "$GCP_SERVICE_ACCOUNT" ) ]]; then
-            echo "::error::Configure either the FIREBASE_SERVICE_ACCOUNT_HUJI_LEON secret or both GCP_WORKLOAD_IDENTITY_PROVIDER and GCP_SERVICE_ACCOUNT repository variables."
-            exit 1
-          fi
-
       - name: Check out repository
         uses: actions/checkout@v4
 
@@ -117,18 +197,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Authenticate to Google Cloud with service account key
-        if: env.FIREBASE_SERVICE_ACCOUNT_CONFIGURED == 'true'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_HUJI_LEON }}
-          project_id: huji-leon
-
-      - name: Authenticate to Google Cloud with workload identity
-        if: env.FIREBASE_SERVICE_ACCOUNT_CONFIGURED != 'true' && env.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && env.GCP_SERVICE_ACCOUNT != ''
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
           project_id: huji-leon
 
       - name: Install Firebase CLI

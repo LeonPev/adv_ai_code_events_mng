@@ -28,6 +28,8 @@ npm run test:e2e        # Playwright (requires dev server or auto-starts one on 
 npm run test:e2e:ui     # Playwright interactive UI
 npm run test:db:reset   # wipe and re-migrate TEST_DATABASE_URL
 npm run test:db:seed    # seed TEST_DATABASE_URL with the standard three accounts
+npm run security:audit         # fail on critical production dependency vulnerabilities
+npm run security:audit:strict  # report high severity production dependency vulnerabilities
 ```
 
 ## Testing
