@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+
+if [[ -n "${ZSH_VERSION:-}" && "${ZSH_EVAL_CONTEXT:-}" == *:file* ]]; then
+  bash "$0" "$@"
+  return $?
+fi
+
+if [[ -n "${BASH_VERSION:-}" && "${BASH_SOURCE[0]}" != "$0" ]]; then
+  bash "${BASH_SOURCE[0]}" "$@"
+  return $?
+fi
+
 set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:-huji-leon}"

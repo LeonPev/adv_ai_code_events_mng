@@ -30,6 +30,8 @@ git push
 npm run deploy
 ```
 
+Run the deploy command directly; do not use `source scripts/manual-deploy.sh`.
+
 If automatic rollouts are enabled for the backend, even `npm run deploy` is
 optional; pushing to the live branch is enough.
 
