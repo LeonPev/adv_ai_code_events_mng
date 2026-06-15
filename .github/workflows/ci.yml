@@ -5,8 +5,13 @@ on:
   push:
   workflow_dispatch:
     inputs:
-      deploy:
-        description: Deploy to Firebase App Hosting after tests pass
+      deploy_stg:
+        description: Deploy STG to Firebase App Hosting after checks pass
+        required: true
+        type: boolean
+        default: false
+      deploy_prod:
+        description: Deploy PROD after checks pass (main only)
         required: true
         type: boolean
         default: false
@@ -174,17 +179,17 @@ jobs:
             test-results
           if-no-files-found: ignore
 
-  deploy:
-    name: Deploy to Firebase App Hosting
+  deploy_stg:
+    name: Deploy STG
     needs:
       - security
       - lint
       - unittests
       - e2e
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy
+    if: github.event_name == 'workflow_dispatch' && (inputs.deploy_stg || (inputs.deploy_prod && github.ref == 'refs/heads/main'))
     runs-on: ubuntu-latest
     environment:
-      name: production
+      name: staging
       url: https://ccms--huji-leon.us-central1.hosted.app
 
     steps:
@@ -207,3 +212,20 @@ jobs:
 
       - name: Deploy
         run: npm run deploy
+
+  deploy_prod:
+    name: Deploy PROD
+    needs:
+      - security
+      - lint
+      - unittests
+      - e2e
+      - deploy_stg
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_prod && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+
+    steps:
+      - name: Deploy PROD placeholder
+        run: echo ok

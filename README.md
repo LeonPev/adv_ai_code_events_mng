@@ -38,8 +38,8 @@ npm run security:audit  # critical production dependency vulnerability audit
 
 ## Deployment
 
-CI runs in GitHub Actions for pushes and pull requests. Production deploys are
-manual: run the CI workflow from GitHub Actions with `deploy` enabled.
+CI runs in GitHub Actions for pushes and pull requests. Deploys are manual: run
+the CI workflow from GitHub Actions with `deploy_stg` or `deploy_prod` enabled.
 
 ```bash
 npm run deploy

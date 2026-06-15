@@ -15,9 +15,8 @@ This app deploys to Firebase App Hosting in project `huji-leon`.
 ## CI Deploy
 
 CI runs from `.github/workflows/ci.yml` on pushes, pull requests, and manual
-workflow dispatches. Production deploys are manual: start the `CI` workflow from
-GitHub Actions and enable the `deploy` input. The deploy job starts only after
-the `security`, `lint`, `unittests`, and `e2e` jobs succeed.
+workflow dispatches. Deploys are manual: start the `CI` workflow from GitHub
+Actions and enable the `deploy_stg` or `deploy_prod` input.
 
 The CI jobs are:
 
@@ -30,8 +29,13 @@ The CI jobs are:
   runs `npm run build`, and runs `npm test`.
 - `e2e`: starts a disposable PostgreSQL service, generates the Prisma client,
   installs Chromium for Playwright, and runs `npm run test:e2e`.
+- `deploy_stg`: deploys to Firebase App Hosting after `security`, `lint`,
+  `unittests`, and `e2e` succeed.
+- `deploy_prod`: only runs from a manual workflow dispatch on `main`, waits for
+  `security`, `lint`, `unittests`, `e2e`, and `deploy_stg`, and currently
+  prints `ok`.
 
-When the manual `deploy` input is enabled, the deploy job runs:
+When the manual `deploy_stg` input is enabled, the staging deploy job runs:
 
 ```bash
 npm run deploy
