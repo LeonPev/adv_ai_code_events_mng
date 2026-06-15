@@ -1,0 +1,23 @@
+{
+  "apphosting": {
+    "backendId": "ccms",
+    "rootDir": ".",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      ".next",
+      "out",
+      "coverage",
+      "test-results",
+      "e2e/.auth",
+      "e2e/.test-results",
+      ".env",
+      ".env*.local",
+      "*.db",
+      "*.db-journal"
+    ],
+    "alwaysDeployFromSource": true
+  }
+}

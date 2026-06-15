@@ -10,6 +10,7 @@ All commands below run from the repo root.
 npm run dev        # start dev server at http://localhost:3000
 npm run build      # production build
 npm run lint       # ESLint
+npm run deploy     # deploy local source to Firebase App Hosting backend ccms
 
 # Database
 npx prisma migrate dev --name <name>   # create and apply a migration

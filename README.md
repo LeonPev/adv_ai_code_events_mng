@@ -35,4 +35,14 @@ npm test                # Vitest unit + integration tests
 npm run test:e2e        # Playwright E2E tests
 ```
 
+## Deployment
+
+```bash
+npm run deploy
+```
+
+This deploys the current local source to the Firebase App Hosting backend
+`ccms`. See `docs/deployment.md` for runtime details and database migration
+notes.
+
 See `CLAUDE.md` for the full command reference and architecture overview.

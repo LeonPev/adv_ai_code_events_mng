@@ -12,28 +12,16 @@ This app deploys to Firebase App Hosting in project `huji-leon`.
 - Runtime database user: `ccms_app`
 - Runtime networking: `ccms-vpc` / `ccms-us-central1` with Cloud SQL private IP
 
-## GitHub Link
+## Deploy
 
-Connect the Firebase App Hosting backend `ccms` to the GitHub repository
-`LeonPev/adv_ai_code_events_mng` in the Firebase console once. After that,
-pushing to the live branch can trigger a rollout automatically.
-
-## Simple Deploy
-
-Firebase App Hosting deploys from GitHub, not from uncommitted local files.
-For normal app changes:
+This is the only app deploy flow supported by this repo:
 
 ```bash
-git add .
-git commit -m "Deploy"
-git push
 npm run deploy
 ```
 
-Run the deploy command directly; do not use `source scripts/manual-deploy.sh`.
-
-If automatic rollouts are enabled for the backend, even `npm run deploy` is
-optional; pushing to the live branch is enough.
+It deploys the current local source to the Firebase App Hosting backend `ccms`.
+Run the command directly; do not use `source scripts/manual-deploy.sh`.
 
 For schema changes, run the Prisma migration once before or after the rollout:
 

@@ -12,28 +12,26 @@ fi
 
 set -euo pipefail
 
-PROJECT_ID="${PROJECT_ID:-huji-leon}"
-BACKEND_ID="${BACKEND_ID:-ccms}"
-COMMIT="${1:-$(git rev-parse HEAD)}"
+PROJECT_ID="huji-leon"
+BACKEND_ID="ccms"
+APP_URL="https://ccms--huji-leon.us-central1.hosted.app"
+DRY_RUN="false"
 
-if [[ -n "$(git status --porcelain)" ]]; then
-  echo "Working tree has uncommitted changes."
-  echo "Firebase App Hosting deploys Git commits, so commit and push first."
-  exit 1
-fi
+for arg in "$@"; do
+  if [[ "$arg" == "--dry-run" ]]; then
+    DRY_RUN="true"
+  fi
+done
 
-git fetch --quiet
-UPSTREAM="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
-if [[ -n "$UPSTREAM" ]] && ! git merge-base --is-ancestor "$COMMIT" "$UPSTREAM"; then
-  echo "Commit $COMMIT is not pushed to $UPSTREAM."
-  echo "Push first, then rerun this deploy."
-  exit 1
-fi
-
-echo "Deploying App Hosting backend '$BACKEND_ID' from commit $COMMIT..."
-firebase apphosting:rollouts:create "$BACKEND_ID" \
+echo "Deploying local source to Firebase App Hosting backend '$BACKEND_ID'..."
+firebase deploy \
   --project "$PROJECT_ID" \
-  --git-commit "$COMMIT" \
-  --force
+  --only "apphosting:$BACKEND_ID" \
+  --non-interactive \
+  "$@"
 
-echo "Done: https://ccms--huji-leon.us-central1.hosted.app"
+if [[ "$DRY_RUN" == "true" ]]; then
+  echo "Dry run OK: $APP_URL"
+else
+  echo "Done: $APP_URL"
+fi
