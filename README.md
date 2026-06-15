@@ -37,12 +37,15 @@ npm run test:e2e        # Playwright E2E tests
 
 ## Deployment
 
+Production deploys run in GitHub Actions on pushes to `main` after linting,
+building, Vitest, and Playwright pass.
+
 ```bash
 npm run deploy
 ```
 
-This deploys the current local source to the Firebase App Hosting backend
-`ccms`. See `docs/deployment.md` for runtime details and database migration
-notes.
+This manually deploys the current local source to the Firebase App Hosting
+backend `ccms`. See `docs/deployment.md` for CI setup, runtime details, and
+database migration notes.
 
 See `CLAUDE.md` for the full command reference and architecture overview.

@@ -12,16 +12,52 @@ This app deploys to Firebase App Hosting in project `huji-leon`.
 - Runtime database user: `ccms_app`
 - Runtime networking: `ccms-vpc` / `ccms-us-central1` with Cloud SQL private IP
 
-## Deploy
+## CI Deploy
 
-This is the only app deploy flow supported by this repo:
+Production deploys run from `.github/workflows/ci.yml` on pushes to `main`.
+The deploy job starts only after the test job succeeds.
+
+The test job runs:
+
+- `npm ci`
+- `npx prisma generate`
+- `npm run test:db:setup` against a disposable PostgreSQL service
+- `npm run lint`
+- `npm run build`
+- `npm test`
+- `npm run test:e2e`
+
+The deploy job runs:
 
 ```bash
 npm run deploy
 ```
 
-It deploys the current local source to the Firebase App Hosting backend `ccms`.
-Run the command directly; do not use `source scripts/manual-deploy.sh`.
+It deploys the repository source to Firebase App Hosting backend `ccms`.
+
+### GitHub authentication
+
+Configure one of these authentication methods in the GitHub repository:
+
+- Service account key: add a repository secret named
+  `FIREBASE_SERVICE_ACCOUNT_HUJI_LEON` containing the service account JSON.
+- Workload identity: add repository variables named
+  `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT`.
+
+The service account needs permission to deploy Firebase App Hosting for project
+`huji-leon`.
+
+## Manual Deploy
+
+Manual deploys are still available from a machine authenticated with Firebase:
+
+```bash
+npm run deploy
+```
+
+This deploys the current local source to the Firebase App Hosting backend
+`ccms`. Run the command directly; do not use
+`source scripts/manual-deploy.sh`.
 
 For schema changes, run the Prisma migration once before or after the rollout:
 
@@ -30,7 +66,9 @@ DATABASE_URL='postgresql://ccms_app:<password>@127.0.0.1:5433/ccms?schema=public
 ```
 
 That command assumes Cloud SQL Auth Proxy is already listening on local port
-`5433`. If there are no schema changes, skip it.
+`5433`. The GitHub Actions deploy does not run production migrations because
+the runtime Cloud SQL instance is private. If there are no schema changes, skip
+the migration command.
 
 ## App Hosting Secrets
 
