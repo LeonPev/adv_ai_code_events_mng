@@ -1,10 +1,23 @@
-export default function CheckInScannerPage({ params }: { params: { eventId: string } }) {
+import { prisma } from "@/lib/prisma"
+import { notFound } from "next/navigation"
+import { Scanner } from "./Scanner"
+
+export default async function CheckInScannerPage({ params }: { params: { eventId: string } }) {
+  const event = await prisma.activity.findUnique({
+    where: { id: params.eventId },
+    include: { _count: { select: { attendance: true } } },
+  })
+
+  if (!event || event.type !== "EVENT") notFound()
+
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-2">Check-In Scanner</h1>
-      <p className="text-gray-400 text-sm">
-        Screen O-03 — QR Scanner. Event: {params.eventId}. Placeholder.
-      </p>
-    </div>
+    <Scanner
+      eventId={event.id}
+      eventName={event.name}
+      eventDate={event.startDatetime?.toLocaleString() ?? ""}
+      initialCheckedIn={event._count.attendance}
+      capacity={event.capacity}
+      disabled={event.status === "CANCELLED"}
+    />
   )
 }

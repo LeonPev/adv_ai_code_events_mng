@@ -5,6 +5,7 @@ export const testPrisma = new PrismaClient()
 
 // Delete rows in FK-safe order (children before parents)
 export async function truncateAll() {
+  await testPrisma.auditLog.deleteMany()
   await testPrisma.attendanceRecord.deleteMany()
   await testPrisma.registration.deleteMany()
   await testPrisma.courseSession.deleteMany()
