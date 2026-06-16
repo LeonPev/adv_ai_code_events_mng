@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Shared by build/test steps that import src/lib/prisma.ts or src/lib/auth.ts.
+  # Steps that manage the test DB directly (setup, unit tests via vitest.config.ts,
+  # e2e via e2e/global-setup.ts) set/override this themselves where needed.
+  DATABASE_URL: file:./test.db
+  NEXTAUTH_SECRET: test-secret-not-for-production
+  NEXTAUTH_URL: http://localhost:3001
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout & install dependencies
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 2: Lint
+      - name: Lint
+        run: npm run lint
+
+      # Step 3: Type check
+      - name: Type check
+        run: npm run type-check
+
+      # Step 4: Dependency audit
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+
+      # Step 5: DB setup (prerequisite for unit & integration tests)
+      - name: Set up test database
+        run: |
+          npm run test:db:setup
+          npm run test:db:seed
+
+      # Step 6: Unit & integration tests
+      - name: Unit & integration tests
+        run: npm run test:coverage
+
+      # Step 7: Production build
+      - name: Build
+        run: npm run build
+
+      # Step 8: E2E tests (global-setup.ts resets/seeds its own test DB)
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        run: npm run test:e2e
+        env:
+          CI: true

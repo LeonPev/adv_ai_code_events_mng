@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/leon/.claude/skills/**)",
+      "Read(//Users/leon/.claude/plugins/**)",
+      "Bash(git -C /Users/leon/Desktop/jb/HUJI/adv_ai_code_events_mng ls-files --error-unmatch ccms)",
+      "Bash(git -C /Users/leon/Desktop/jb/HUJI/adv_ai_code_events_mng ls-files --others --exclude-standard)",
+      "Bash(git -C /Users/leon/Desktop/jb/HUJI/adv_ai_code_events_mng ls-files)",
+      "Bash(git *)",
+      "Bash(npx tsx *)",
+      "Bash(DATABASE_URL=\"file:./dev.db\" npx tsx *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/auth/signup)",
+      "Bash(curl -s http://localhost:3000/auth/signup)",
+      "Bash(ps *)",
+      "Bash(npx playwright *)",
+      "Bash(curl -sL http://localhost:3000/auth/signup)",
+      "Bash(node *)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/_next/static/chunks/app/auth/signup/page.js)",
+      "Bash(DATABASE_URL=file:./dev.db node -e ' *)",
+      "Bash(DATABASE_URL=\"file:./dev.db\" node *)",
+      "Bash(npm test *)",
+      "Skill(run)",
+      "Bash(lsof -ti:3000)",
+      "Bash(curl *)"
+    ]
+  },
+  "model": "sonnet",
+  "availableModels": ["sonnet", "haiku"],
+  "effortLevel": "medium",
+  "enabledMcpjsonServers": [
+    "github"
+  ]
+}

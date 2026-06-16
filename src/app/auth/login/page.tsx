@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { signIn, getSession } from 'next-auth/react'
 import Link from 'next/link'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -24,9 +22,9 @@ export default function LoginPage() {
 
       if (result?.ok) {
         const session = await getSession()
-        if (session?.user.role === 'ADMIN') router.push('/admin')
-        else if (session?.user.role === 'OPERATOR') router.push('/operator')
-        else router.push('/activities')
+        if (session?.user.role === 'ADMIN') window.location.href = '/admin'
+        else if (session?.user.role === 'OPERATOR') window.location.href = '/operator'
+        else window.location.href = '/activities'
         return
       }
 
@@ -90,6 +88,12 @@ export default function LoginPage() {
         <p className="mt-4 text-center text-sm text-gray-500">
           <Link href="/auth/forgot-password" className="text-blue-600 hover:underline">
             Forgot password?
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-gray-500">
+          Don&apos;t have an account?{' '}
+          <Link href="/auth/signup" className="text-blue-600 hover:underline">
+            Sign up
           </Link>
         </p>
       </div>
